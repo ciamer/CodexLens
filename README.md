@@ -7,6 +7,10 @@ codex-lens 是一个面向科研场景的 Codex 输入透镜。它把图片、DO
 - MCP 工具：`analyze_img`、`read_docx`、`read_pdf`、`read_document`
 - HTTP 代理：拦截 OpenAI 兼容请求里的 base64 图片，调用 Qwen 视觉模型分析后替换为文本，再转发到下游服务
 
+## 使用 Codex 自动安装 codex-lens
+
+如果你希望让 Codex 自动完成克隆、安装、配置和测试，可以复制 [Codex 自动部署提示词](docs/codex-deploy-prompt.md)，把其中的 GitHub 仓库链接和 API Key 替换成自己的。
+
 ## 状态
 
 这是早期原型，适合个人研究工作流和小范围试用。公开部署前请先阅读 API Key 配置、安全说明和卸载说明。
