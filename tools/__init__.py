@@ -1,4 +1,4 @@
-"""codex-lens tool modules."""
+"""CodexLens tool modules."""
 
 from .analyze_img import analyze_image, analyze_image_base64
 from .read_docx import read_docx

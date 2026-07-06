@@ -87,7 +87,7 @@ def rewrite_images(value: Any, config: ProxyConfig, counter: List[int]) -> Any:
     if image_payload:
         image_data, mime_type = image_payload
         counter[0] += 1
-        log(f"[codex-lens] analyzing pasted image #{counter[0]} ({mime_type})")
+        log(f"[CodexLens] analyzing pasted image #{counter[0]} ({mime_type})")
         try:
             description = analyze_image_base64(
                 image_data,
@@ -140,7 +140,7 @@ def upstream_url(base_url: str, request_path: str) -> str:
 
 
 class CodexLensProxyHandler(BaseHTTPRequestHandler):
-    server_version = "codex-lens-proxy/0.1"
+    server_version = "CodexLens-proxy/0.1"
     config: ProxyConfig
 
     def log_message(self, fmt: str, *args: Any) -> None:
@@ -186,7 +186,7 @@ class CodexLensProxyHandler(BaseHTTPRequestHandler):
         if body and self.command.upper() == "POST":
             body, image_count = maybe_rewrite_json(body, content_type, self.config)
             if image_count:
-                log(f"[codex-lens] replaced {image_count} image part(s) with text")
+                log(f"[CodexLens] replaced {image_count} image part(s) with text")
 
         url = upstream_url(self.config.upstream_base_url, self.path)
         request = urllib.request.Request(
@@ -218,7 +218,7 @@ class CodexLensProxyHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(exc.read())
         except Exception as exc:
-            payload = json.dumps({"error": f"codex-lens proxy error: {exc}"}, ensure_ascii=False).encode("utf-8")
+            payload = json.dumps({"error": f"CodexLens proxy error: {exc}"}, ensure_ascii=False).encode("utf-8")
             self.send_response(502)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(payload)))
@@ -239,15 +239,15 @@ def make_server(host: str, port: int, config: ProxyConfig) -> CodexLensProxyServ
 
 def start_proxy_in_thread(host: str, port: int, config: ProxyConfig) -> Tuple[CodexLensProxyServer, threading.Thread]:
     server = make_server(host, port, config)
-    thread = threading.Thread(target=server.serve_forever, name="codex-lens-proxy", daemon=True)
+    thread = threading.Thread(target=server.serve_forever, name="CodexLens-proxy", daemon=True)
     thread.start()
-    log(f"[codex-lens] proxy listening on http://{host}:{port}, upstream {config.upstream_base_url}")
+    log(f"[CodexLens] proxy listening on http://{host}:{port}, upstream {config.upstream_base_url}")
     return server, thread
 
 
 def run_proxy(host: str, port: int, config: ProxyConfig) -> None:
     server = make_server(host, port, config)
-    log(f"[codex-lens] proxy listening on http://{host}:{port}, upstream {config.upstream_base_url}")
+    log(f"[CodexLens] proxy listening on http://{host}:{port}, upstream {config.upstream_base_url}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -257,7 +257,7 @@ def run_proxy(host: str, port: int, config: ProxyConfig) -> None:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="codex-lens HTTP image rewriting proxy")
+    parser = argparse.ArgumentParser(description="CodexLens HTTP image rewriting proxy")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=57320)
     parser.add_argument("--upstream-base-url", default="http://127.0.0.1:57321")

@@ -1,6 +1,6 @@
 # Python 环境要求
 
-codex-lens 是纯 Python 项目，推荐使用 Python 3.9 或更高版本。
+CodexLens 是纯 Python 项目，推荐使用 Python 3.9 或更高版本。
 
 ## 必需依赖
 
@@ -9,6 +9,7 @@ openai
 python-docx
 pdfplumber
 PyMuPDF
+winotify; platform_system == "Windows"
 ```
 
 安装方式：

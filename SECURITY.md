@@ -2,13 +2,13 @@
 
 ## Supported Versions
 
-codex-lens is currently an early prototype. Security fixes target the latest version on the main branch.
+CodexLens is currently an early prototype. Security fixes target the latest version on the main branch.
 
 ## API Keys
 
 Do not put API keys in source files, README files, issue comments, pull requests, screenshots, or Codex configuration files.
 
-codex-lens reads the visual model API key from:
+CodexLens reads the visual model API key from:
 
 ```text
 CODEX_LENS_API_KEY
@@ -24,4 +24,4 @@ If this repository is public, report vulnerabilities through GitHub private vuln
 
 ## Data Handling
 
-codex-lens sends images to the configured vision model provider when image analysis is enabled. Users should avoid processing confidential documents unless their provider account and policy allow that use.
+CodexLens sends images to the configured vision model provider when image analysis is enabled. Users should avoid processing confidential documents unless their provider account and policy allow that use.

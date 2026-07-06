@@ -12,7 +12,7 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8")
 
 PROTOCOL_VERSION = "2025-06-18"
-SERVER_INFO = {"name": "codex-lens", "version": "0.1.0"}
+SERVER_INFO = {"name": "CodexLens", "version": "0.1.0"}
 
 
 def _schema_file_tool(description: str) -> Dict[str, Any]:
@@ -184,7 +184,7 @@ def handle_request(message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                     "protocolVersion": PROTOCOL_VERSION,
                     "capabilities": {"tools": {"listChanged": False}},
                     "serverInfo": SERVER_INFO,
-                    "instructions": "codex-lens 可读取 DOCX/PDF 并分析图片，将多模态输入转换为结构化文本。",
+                    "instructions": "CodexLens 可读取 DOCX/PDF 并分析图片，将多模态输入转换为结构化文本。",
                 },
             )
         if method == "ping":
@@ -237,7 +237,7 @@ def _handle_payload(payload: Any) -> Iterable[Dict[str, Any]]:
 
 
 def run_stdio() -> None:
-    log("[codex-lens] MCP stdio server started")
+    log("[CodexLens] MCP stdio server started")
     for raw_line in sys.stdin.buffer:
         line = raw_line.decode("utf-8", errors="replace").strip()
         if not line:
@@ -250,7 +250,7 @@ def run_stdio() -> None:
 
         for item in _handle_payload(payload):
             emit(item)
-    log("[codex-lens] MCP stdio server stopped")
+    log("[CodexLens] MCP stdio server stopped")
 
 
 if __name__ == "__main__":

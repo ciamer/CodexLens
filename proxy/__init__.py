@@ -1,1 +1,1 @@
-"""HTTP proxy for codex-lens."""
+"""HTTP proxy for CodexLens."""

@@ -2,6 +2,7 @@ import argparse
 import sys
 
 from mcp_server import run_stdio
+from notifications import notify
 from proxy.server import ProxyConfig, run_proxy, start_proxy_in_thread
 
 
@@ -11,7 +12,7 @@ for _stream in (sys.stdout, sys.stderr):
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="codex-lens: MCP tools + image rewriting proxy")
+    parser = argparse.ArgumentParser(description="CodexLens: MCP tools + image rewriting proxy")
     parser.add_argument("--host", default="127.0.0.1", help="HTTP proxy listen host")
     parser.add_argument("--port", type=int, default=57320, help="HTTP proxy listen port")
     parser.add_argument(
@@ -41,14 +42,17 @@ def main() -> None:
     config = ProxyConfig(**config_kwargs)
 
     if args.proxy_only:
+        notify("CodexLens", f"图片自动拦截正在运行，监听 {args.host}:{args.port}。")
         run_proxy(args.host, args.port, config)
         return
 
     if not args.no_proxy:
         try:
             start_proxy_in_thread(args.host, args.port, config)
+            notify("CodexLens", f"图片自动拦截正在运行，监听 {args.host}:{args.port}。")
         except OSError as exc:
-            print(f"[codex-lens] 代理启动失败: {exc}", file=sys.stderr, flush=True)
+            print(f"[CodexLens] 代理启动失败: {exc}", file=sys.stderr, flush=True)
+            notify("CodexLens", f"图片自动拦截启动失败：{exc}")
             raise
 
     run_stdio()

@@ -4,7 +4,7 @@
 
 ## 项目定位
 
-codex-lens 是 Codex 的科研输入透镜，用 MCP 工具和 HTTP 代理把图片、DOCX、PDF 等多模态输入转换为结构化文本。
+CodexLens 是 Codex 的科研输入透镜，用 MCP 工具和 HTTP 代理把图片、DOCX、PDF 等多模态输入转换为结构化文本。
 
 ## Python 环境
 
@@ -28,7 +28,10 @@ codex-lens 是 Codex 的科研输入透镜，用 MCP 工具和 HTTP 代理把图
 $env:PYTHONIOENCODING='utf-8'; python -m compileall .
 $env:PYTHONIOENCODING='utf-8'; python -m unittest discover -s tests
 $env:PYTHONIOENCODING='utf-8'; python .\main.py --no-proxy
-$env:PYTHONIOENCODING='utf-8'; python .\install.py --upstream-base-url http://127.0.0.1:57321
+$env:PYTHONIOENCODING='utf-8'; python .\install.py --mcp-only
+$env:PYTHONIOENCODING='utf-8'; python .\install.py --enable-image-proxy --upstream-base-url http://127.0.0.1:57321
+$env:PYTHONIOENCODING='utf-8'; python .\install.py --disable-image-proxy
+$env:PYTHONIOENCODING='utf-8'; python .\install.py --status
 $env:PYTHONIOENCODING='utf-8'; python .\install.py --uninstall
 ```
 
@@ -36,5 +39,7 @@ $env:PYTHONIOENCODING='utf-8'; python .\install.py --uninstall
 
 - 用户只应手动获取百炼 API Key。
 - Codex 可以帮助设置 `CODEX_LENS_API_KEY` 用户环境变量，但不要把 Key 输出到日志或写入文件。
+- 默认安装使用 `--mcp-only`，不要默认开启图片自动拦截。
+- 图片自动拦截通过 `--enable-image-proxy` 和 `--disable-image-proxy` 单独开关。
 - 安装脚本会修改 Codex `config.toml`，运行前后都要提醒用户重启 Codex。
 - 旧版脚本放在 `_local_legacy/`，该目录被 `.gitignore` 忽略，不应提交到 GitHub。

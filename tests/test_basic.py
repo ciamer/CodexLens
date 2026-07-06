@@ -1,6 +1,10 @@
 import json
 import os
+import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
+from pathlib import Path
 
 import install
 import proxy.server as proxy_server
@@ -19,7 +23,7 @@ class McpServerTests(unittest.TestCase):
             }
         )
 
-        self.assertEqual(result["result"]["serverInfo"]["name"], "codex-lens")
+        self.assertEqual(result["result"]["serverInfo"]["name"], "CodexLens")
 
     def test_tools_list_contains_expected_tools(self):
         result = handle_request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
@@ -72,17 +76,79 @@ class InstallTests(unittest.TestCase):
             ]
         )
 
-        out = install.upsert_block(text, install.server_block("python", "main.py", "http://127.0.0.1:57321"))
+        out = install.upsert_block(
+            text,
+            install.server_block(
+                "python",
+                "main.py",
+                "http://127.0.0.1:57321",
+                image_proxy_enabled=False,
+            ),
+        )
 
-        self.assertEqual(out.count("[mcp_servers.codex_lens]"), 1)
+        self.assertEqual(out.count("[mcp_servers.CodexLens]"), 1)
         self.assertEqual(out.count("[mcp_servers.codex_turbo]"), 0)
+        self.assertEqual(out.count("[mcp_servers.codex_lens]"), 0)
+        self.assertIn("--no-proxy", out)
+
+    def test_server_block_omits_no_proxy_when_image_proxy_enabled(self):
+        out = install.server_block(
+            "python",
+            "main.py",
+            "http://127.0.0.1:57321",
+            image_proxy_enabled=True,
+        )
+
+        self.assertNotIn("--no-proxy", out)
 
     def test_remove_proxy_base_url_only_removes_own_value(self):
         text = 'base_url = "http://127.0.0.1:57320/v1"\nother = "kept"\n'
-        out = install.remove_proxy_base_url(text, "http://127.0.0.1:57320/v1")
+        out = install.remove_base_url_if_value(text, "http://127.0.0.1:57320/v1")
 
         self.assertNotIn("base_url", out)
         self.assertIn("other", out)
+
+    def test_build_state_preserves_previous_base_url(self):
+        state = install.build_state(
+            {},
+            had_base_url=True,
+            current_base_url="http://127.0.0.1:57321/v1",
+            proxy_base_url="http://127.0.0.1:57320/v1",
+            upstream_base_url="http://127.0.0.1:57321",
+        )
+
+        self.assertTrue(state["had_previous_base_url"])
+        self.assertEqual(state["previous_base_url"], "http://127.0.0.1:57321/v1")
+
+    def test_mcp_only_restores_proxy_base_url_from_state(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.toml"
+            state_path = Path(temp_dir) / "codex-lens-state.json"
+            config_path.write_text('base_url = "http://127.0.0.1:57320/v1"\n', encoding="utf-8")
+            install.save_state(
+                state_path,
+                {
+                    "had_previous_base_url": True,
+                    "previous_base_url": "http://127.0.0.1:57321/v1",
+                    "proxy_base_url": "http://127.0.0.1:57320/v1",
+                },
+            )
+
+            with redirect_stdout(StringIO()):
+                install.install_mcp_only(
+                    config_path=config_path,
+                    state_path=state_path,
+                    python_path="python",
+                    main_path="main.py",
+                    proxy_base_url="http://127.0.0.1:57320/v1",
+                    upstream_base_url="http://127.0.0.1:57321",
+                )
+
+            text = config_path.read_text(encoding="utf-8")
+
+        self.assertIn('base_url = "http://127.0.0.1:57321/v1"', text)
+        self.assertIn("--no-proxy", text)
+        self.assertIn("[mcp_servers.CodexLens]", text)
 
 
 class ApiKeyTests(unittest.TestCase):

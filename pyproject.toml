@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "codex-lens"
+name = "CodexLens"
 version = "0.1.0"
 description = "Codex input lens for scientific documents and images."
 readme = "README.md"
@@ -14,6 +14,7 @@ dependencies = [
   "python-docx",
   "pdfplumber",
   "PyMuPDF",
+  "winotify; platform_system == 'Windows'",
 ]
 
 [project.urls]
@@ -22,5 +23,5 @@ Documentation = "https://github.com/ciamer/codex-lens#readme"
 Issues = "https://github.com/ciamer/codex-lens/issues"
 
 [tool.setuptools]
-py-modules = ["main", "mcp_server", "install"]
+py-modules = ["main", "mcp_server", "install", "notifications"]
 packages = ["tools", "proxy"]

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve codex-lens.
+Thanks for helping improve CodexLens.
 
 ## Development Setup
 

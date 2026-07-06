@@ -1,12 +1,12 @@
-﻿# codex-lens — 项目总结文档
+﻿# CodexLens — 项目总结文档
 
 ## 一、项目定位
 
-**codex-lens 是一个面向科研场景的 Codex 输入透镜。**
+**CodexLens 是一个面向科研场景的 Codex 输入透镜。**
 
 它不是写作工具，而是理解工具。专注于在信息到达 LLM 之前，完成多模态内容的提取、分析和结构化，让纯文本模型也能处理图片、文档等复杂输入。
 
-> Documents 插件是"输出的笔"，codex-lens 是"输入的眼"。
+> Documents 插件是"输出的笔"，CodexLens 是"输入的眼"。
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## 三、解决的核心问题
 
-| 场景 | 问题 | codex-lens 方案 |
+| 场景 | 问题 | CodexLens 方案 |
 |------|------|-----------------|
 | 粘贴图片到聊天框 | 纯文本模型无法理解图片内容 | 代理拦截 → Qwen 分析 → 替换为文本 |
 | "帮我分析这张 Figure" | 无现成工具 | MCP 工具：analyze_img |
@@ -46,7 +46,7 @@
 - **定位**：PDF 创建和排版验证
 - **局限**：以渲染检查为主，无 AI 图片分析能力
 
-### codex-lens
+### CodexLens
 - **定位**：科研输入透镜——从文档/图片中提取内容给模型理解
 - **输出**：结构化纯文本
 - **关系**：**互补，不冲突，可并存**
@@ -63,11 +63,11 @@
 │  Codex 桌面版                                                   │
 │    │                                                           │
 │    ├─ config.toml: base_url → proxy:57320                      │
-│    ├─ config.toml: mcp_server → codex_lens 进程                │
+│    ├─ config.toml: mcp_server → CodexLens 进程                 │
 │    │                                                           │
 │    ▼                                                           │
 │  ┌─────────────────────────────────────┐                      │
-│  │  codex_lens (单一 MCP 进程)         │                      │
+│  │  CodexLens (单一 MCP 进程)          │                      │
 │  │  ┌──────────────┐  ┌────────────┐   │                      │
 │  │  │ MCP Stdio    │  │ HTTP Proxy │   │                      │
 │  │  │ 接口         │  │ :57320     │   │                      │
@@ -95,7 +95,7 @@
 ### 两种通信路径
 
 **路径 A：用户主动请求（MCP）**
-用户说"读这个 docx" → Codex 通过 MCP 协议调用 codex_lens 的 read_docx 工具 → 返回文档内容 → 模型理解内容
+用户说"读这个 docx" → Codex 通过 MCP 协议调用 CodexLens 的 read_docx 工具 → 返回文档内容 → 模型理解内容
 
 **路径 B：用户粘贴图片（Proxy）**
 用户粘贴图片 → Codex 发 API 请求到 proxy:57320 → proxy 检测到 base64 图片 → 调用 Qwen 分析 → 替换为文本 → 转发给 codex++:57321 → DeepSeek 收到纯文本
@@ -137,7 +137,7 @@ Proxy 拦截图片 ─┼──→ Qwen-VL API → 文字描述
 ---
 
 ## 七、部署方案
-**当前为临时版本，有待商榷 **
+**当前默认安装 MCP 工具，图片自动拦截需要用户显式开启。**
 ### 核心思路
 
 利用 Codex 的 MCP 服务器机制，让 Codex **自动管理进程生命周期**：
@@ -145,9 +145,9 @@ Proxy 拦截图片 ─┼──→ Qwen-VL API → 文字描述
 ```
 config.toml 中注册：
 
-[mcp_servers.codex_lens]
+[mcp_servers.CodexLens]
 command = 'Codex 自带 python.exe'
-args = ["main.py"]
+args = ["main.py", "--no-proxy"]
 startup_timeout_sec = 30
 ```
 
@@ -162,17 +162,23 @@ startup_timeout_sec = 30
 # 1. 克隆
 git clone https://github.com/ciamer/codex-lens
 
-# 2. 运行安装脚本（只做一件事：修改 config.toml）
-python install.py
+# 2. 默认只安装 MCP 工具
+python install.py --mcp-only
 
 # 3. 重启 Codex
 ```
 
 install.py 自动完成：
 1. 找到 Codex 的 config.toml
-2. 添加 `[mcp_servers.codex_lens]` 条目（指向 Codex 自带的 Python）
-3. 修改 `base_url` 指向代理端口 57320
+2. 添加 `[mcp_servers.CodexLens]` 条目（指向 Codex 自带的 Python）
+3. 默认添加 `--no-proxy`，不修改 `base_url`
 4. 提示用户重启 Codex
+
+如需粘贴图片自动拦截，再运行：
+
+```bash
+python install.py --enable-image-proxy --upstream-base-url http://127.0.0.1:57321
+```
 
 ### 不依赖外部 Python 环境
 
@@ -230,4 +236,4 @@ codex-lens/
 
 ## 十一、一句话总结
 
-> **codex-lens 是 Codex × 纯文本模型场景下的科研输入透镜，用 MCP 工具 + HTTP 代理填补了官方插件在"理解文档内容"和"拦截粘贴图片"上的空白，与 Documents/PDF 插件互补共存。**
+> **CodexLens 是 Codex × 纯文本模型场景下的科研输入透镜，用 MCP 工具 + HTTP 代理填补了官方插件在"理解文档内容"和"拦截粘贴图片"上的空白，与 Documents/PDF 插件互补共存。**

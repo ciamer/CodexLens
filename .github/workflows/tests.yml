@@ -17,4 +17,4 @@ jobs:
       - name: Run unit tests
         run: python -m unittest discover -s tests
       - name: Compile sources
-        run: python -m compileall main.py mcp_server.py install.py proxy tools tests
+        run: python -m compileall main.py mcp_server.py install.py notifications.py proxy tools tests
