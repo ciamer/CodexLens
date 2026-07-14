@@ -7,7 +7,7 @@ MCP 工具：read_docx / read_pdf / read_document / analyze_img
 图片代理：自动拦截粘贴图片并转成文字描述
 ```
 
-图片自动拦截由 Codex `base_url` 是否指向 CodexLens 代理决定。CodexLens MCP 现在提供状态、开启和关闭图片自动拦截工具，因此在 MCP 已启用的会话中，可以直接要求 Codex 开关它。
+图片自动拦截由 Codex `base_url` 是否指向 CodexLens 代理决定。CodexLens MCP 提供状态、开启和关闭图片自动拦截工具。**必须先在 Codex 设置中启用 CodexLens MCP，才能通过对话调用这些工具。** 若 MCP 已关闭，请先在设置中重新启用它并重启 Codex。
 
 ## 默认安装
 

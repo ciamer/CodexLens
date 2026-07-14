@@ -71,4 +71,4 @@ https://github.com/ciamer/codex-lens
 
 ## 开启或关闭图片自动拦截
 
-默认安装已经开启图片自动拦截。以后需要改变状态时，直接对 Codex 说“请开启 CodexLens 的图片自动拦截”或“请关闭 CodexLens 的图片自动拦截，但保留 MCP 工具”。它应按 [图片自动拦截开关](image-proxy-toggle.md) 操作，说明会修改或恢复 Codex 的 `base_url`，并提醒你重启 Codex。
+默认安装已经开启图片自动拦截。只有在 Codex 设置中启用了 CodexLens MCP 时，才能通过对话开关图片自动拦截。以后需要改变状态时，直接对 Codex 说“请开启 CodexLens 的图片自动拦截”或“请关闭 CodexLens 的图片自动拦截，但保留 MCP 工具”。它应按 [图片自动拦截开关](image-proxy-toggle.md) 操作，说明会修改或恢复 Codex 的 `base_url`，并提醒你重启 Codex。
