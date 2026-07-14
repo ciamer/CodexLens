@@ -278,8 +278,10 @@ def uninstall(config_path: Path, state_path: Path, proxy_base_url: str) -> None:
 def status(config_path: Path, state_path: Path, proxy_base_url: str) -> None:
     text = read_text(config_path)
     state = load_state(state_path)
-    has_mcp = bool(MCP_BLOCK_RE.search(text))
-    has_no_proxy = "--no-proxy" in text
+    mcp_block = MCP_BLOCK_RE.search(text)
+    block_text = mcp_block.group(0) if mcp_block else ""
+    has_mcp = bool(mcp_block) and not bool(re.search(r"(?m)^enabled\s*=\s*false\s*$", block_text))
+    has_no_proxy = "--no-proxy" in block_text
     had_base_url, current_base_url = get_base_url(text)
     image_proxy_enabled = current_base_url == proxy_base_url and has_mcp and not has_no_proxy
 

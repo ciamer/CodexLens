@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import install
+import mcp_server
 import proxy.server as proxy_server
 from mcp_server import handle_request
 from tools.analyze_img import get_api_key
@@ -31,7 +32,55 @@ class McpServerTests(unittest.TestCase):
         result = handle_request({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
         names = {tool["name"] for tool in result["result"]["tools"]}
 
-        self.assertTrue({"analyze_img", "read_docx", "read_pdf", "read_document"}.issubset(names))
+        self.assertTrue(
+            {
+                "analyze_img",
+                "read_docx",
+                "read_pdf",
+                "read_document",
+                "get_image_interception_status",
+                "enable_image_interception",
+                "disable_image_interception",
+            }.issubset(names)
+        )
+
+    def test_management_tools_update_temporary_config(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.toml"
+            state_path = Path(temp_dir) / "codex-lens-state.json"
+            context = (
+                config_path,
+                state_path,
+                "python",
+                "main.py",
+                "http://127.0.0.1:57320/v1",
+                "http://127.0.0.1:57321",
+            )
+
+            with patch.object(mcp_server, "_management_context", return_value=context), patch.object(install, "notify"):
+                enabled = handle_request(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {"name": "enable_image_interception", "arguments": {}},
+                    }
+                )
+                disabled = handle_request(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 4,
+                        "method": "tools/call",
+                        "params": {"name": "disable_image_interception", "arguments": {}},
+                    }
+                )
+
+            text = config_path.read_text(encoding="utf-8")
+
+        self.assertIn("已开启图片自动拦截", enabled["result"]["content"][0]["text"])
+        self.assertIn("已关闭图片自动拦截", disabled["result"]["content"][0]["text"])
+        self.assertNotIn('base_url = "http://127.0.0.1:57320/v1"', text)
+        self.assertIn("--no-proxy", text)
 
 
 class ProxyTests(unittest.TestCase):
@@ -172,6 +221,20 @@ class InstallTests(unittest.TestCase):
         self.assertIn('base_url = "http://127.0.0.1:57321/v1"', text)
         self.assertIn("--no-proxy", text)
         self.assertIn("[mcp_servers.CodexLens]", text)
+
+    def test_status_reports_disabled_mcp_block(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.toml"
+            state_path = Path(temp_dir) / "codex-lens-state.json"
+            config_path.write_text(
+                "[mcp_servers.CodexLens]\ncommand = \"python\"\nenabled = false\n",
+                encoding="utf-8",
+            )
+
+            with redirect_stdout(StringIO()) as output:
+                install.status(config_path, state_path, "http://127.0.0.1:57320/v1")
+
+        self.assertIn("MCP: disabled", output.getvalue())
 
 
 class ApiKeyTests(unittest.TestCase):

@@ -1,8 +1,12 @@
 import json
 import sys
 import traceback
+from contextlib import redirect_stdout
+from io import StringIO
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
+import install
 from tools import analyze_image, analyze_image_base64, read_docx, read_document, read_pdf
 from tools.analyze_img import DEFAULT_PROMPT, MODEL
 
@@ -84,6 +88,24 @@ TOOLS: List[Dict[str, Any]] = [
         "description": "根据后缀自动读取 .docx 或 .pdf 文件。",
         "inputSchema": _schema_file_tool("自动文档读取参数"),
     },
+    {
+        "name": "get_image_interception_status",
+        "title": "Get Image Interception Status",
+        "description": "查看 CodexLens 图片自动拦截和 MCP 的配置状态。",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "name": "enable_image_interception",
+        "title": "Enable Image Interception",
+        "description": "仅在用户明确要求时调用。开启 CodexLens 图片自动拦截，备份并修改 Codex 配置；完成后必须重启 Codex。",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
+    {
+        "name": "disable_image_interception",
+        "title": "Disable Image Interception",
+        "description": "仅在用户明确要求时调用。关闭 CodexLens 图片自动拦截但保留文档分析工具，恢复 Codex 配置；完成后必须重启 Codex。",
+        "inputSchema": {"type": "object", "properties": {}, "additionalProperties": False},
+    },
 ]
 
 
@@ -129,7 +151,60 @@ def _doc_args(args: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _management_context() -> tuple[Path, Path, str, str, str, str]:
+    config_path = install.default_config_path()
+    state_path = install.default_state_path(config_path)
+    state = install.load_state(state_path)
+    upstream_base_url = str(state.get("upstream_base_url") or install.DEFAULT_UPSTREAM_BASE_URL)
+    return (
+        config_path,
+        state_path,
+        sys.executable,
+        str(Path(__file__).resolve().parent / "main.py"),
+        install.DEFAULT_PROXY_BASE_URL,
+        upstream_base_url,
+    )
+
+
+def _run_management_action(action: str) -> Dict[str, Any]:
+    config_path, state_path, python_path, main_path, proxy_base_url, upstream_base_url = _management_context()
+    output = StringIO()
+
+    with redirect_stdout(output):
+        if action == "status":
+            install.status(config_path, state_path, proxy_base_url)
+        elif action == "enable":
+            install.enable_image_proxy(
+                config_path,
+                state_path,
+                python_path,
+                main_path,
+                proxy_base_url,
+                upstream_base_url,
+            )
+        elif action == "disable":
+            install.disable_image_proxy(
+                config_path,
+                state_path,
+                python_path,
+                main_path,
+                proxy_base_url,
+                upstream_base_url,
+            )
+        else:
+            raise ValueError(f"未知管理操作: {action}")
+
+    return text_result(output.getvalue().strip())
+
+
 def call_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    if name == "get_image_interception_status":
+        return _run_management_action("status")
+    if name == "enable_image_interception":
+        return _run_management_action("enable")
+    if name == "disable_image_interception":
+        return _run_management_action("disable")
+
     if name == "analyze_img":
         prompt = args.get("prompt") or DEFAULT_PROMPT
         model = args.get("model") or MODEL
