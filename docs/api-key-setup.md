@@ -1,6 +1,6 @@
 # 百炼 API Key 配置指南
 
-CodexLens 需要一个百炼 API Key 来调用视觉模型。简单说，CodexLens 负责把图片、Word 或 PDF 里的图交给模型看，API Key 用来证明这是你的百炼账号在发起调用。
+CodexLens 需要一个全模态或视觉模型 API Key 来调用视觉模型。默认使用的是阿里的`qwen3.5-flash`模型，每个人有100万的免费额度，足够分析上百张图片。
 
 如果你只是想完成安装，先在百炼控制台创建一个 Key，然后回到 [Codex 自动部署提示词](codex-deploy-prompt.md)。默认提示词可以让 Codex 帮你设置；不想把 Key 发到对话时，也可以按提示词页面里的两步法自己设置。
 
@@ -41,7 +41,7 @@ CODEX_LENS_VISION_MODEL=qwen3.5-flash
 
 ## 关于免费 token
 
-百炼控制台可能会为部分模型或新用户提供免费额度。`qwen3.5-flash` 适合作为 CodexLens 的默认轻量视觉分析模型。
+百炼控制台可能会为部分模型或新用户提供免费额度。`qwen3.5-flash` 适合作为 CodexLens 的默认轻量视觉分析模型。如果`qwen3.5-flash`的免费额度用完了，可以看看有什么别的模型有免费额度，直接让Codex替换`qwen3.5-flash`为其他模型即可。
 
 免费额度会受账号、地域、活动和模型版本影响，项目不承诺固定额度。部署时请以百炼控制台的实际额度页面为准。
 
