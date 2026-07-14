@@ -1,10 +1,12 @@
 import json
 import os
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 import install
 import proxy.server as proxy_server
@@ -100,6 +102,27 @@ class InstallTests(unittest.TestCase):
         )
 
         self.assertNotIn("--no-proxy", out)
+
+    def test_default_install_enables_image_proxy(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "config.toml"
+            state_path = Path(temp_dir) / "codex-lens-state.json"
+            argv = [
+                "install.py",
+                "--config",
+                str(config_path),
+                "--state",
+                str(state_path),
+            ]
+
+            with patch.object(sys, "argv", argv), patch.object(install, "notify"), redirect_stdout(StringIO()):
+                install.main()
+
+            text = config_path.read_text(encoding="utf-8")
+
+        self.assertIn('base_url = "http://127.0.0.1:57320/v1"', text)
+        self.assertIn("[mcp_servers.CodexLens]", text)
+        self.assertNotIn("--no-proxy", text)
 
     def test_remove_proxy_base_url_only_removes_own_value(self):
         text = 'base_url = "http://127.0.0.1:57320/v1"\nother = "kept"\n'

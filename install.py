@@ -303,7 +303,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--upstream-base-url", default=DEFAULT_UPSTREAM_BASE_URL)
 
     actions = parser.add_mutually_exclusive_group()
-    actions.add_argument("--mcp-only", action="store_true", help="只启用 MCP，不开启图片自动拦截（推荐默认模式）")
+    actions.add_argument("--mcp-only", action="store_true", help="只启用 MCP，并关闭图片自动拦截")
     actions.add_argument("--enable-image-proxy", action="store_true", help="开启粘贴图片自动拦截")
     actions.add_argument("--disable-image-proxy", action="store_true", help="关闭图片自动拦截，保留 MCP")
     actions.add_argument("--status", action="store_true", help="显示当前安装状态")
@@ -342,7 +342,7 @@ def main() -> None:
         )
         return
 
-    install_mcp_only(
+    enable_image_proxy(
         config_path=args.config,
         state_path=state_path,
         python_path=args.python,

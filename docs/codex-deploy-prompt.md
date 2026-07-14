@@ -23,7 +23,7 @@ https://github.com/ciamer/codex-lens
 7. 依次运行下面两项基础测试：
    python -m unittest discover -s tests
    python -m compileall .
-8. 运行 python .\install.py --mcp-only，把 CodexLens MCP 安装到 Codex。默认不要开启图片自动拦截。
+8. 运行 python .\install.py，把 CodexLens MCP 和图片自动拦截安装到 Codex。默认开启图片自动拦截。
 9. 如果修改了 Codex 配置，确认安装脚本已经创建备份。
 10. 运行 python .\install.py --status，并只告诉我状态摘要。
 11. 最后告诉我仓库路径、测试是否通过，以及提醒我重启 Codex。
@@ -60,7 +60,7 @@ https://github.com/ciamer/codex-lens
 6. 依次运行下面两项基础测试：
    python -m unittest discover -s tests
    python -m compileall .
-7. 运行 python .\install.py --mcp-only，把 CodexLens MCP 安装到 Codex。默认不要开启图片自动拦截。
+7. 运行 python .\install.py，把 CodexLens MCP 和图片自动拦截安装到 Codex。默认开启图片自动拦截。
 8. 运行 python .\install.py --status，并只告诉我状态摘要。
 9. 最后告诉我仓库路径、测试是否通过，以及提醒我重启 Codex。
 
@@ -69,6 +69,6 @@ https://github.com/ciamer/codex-lens
 
 设置用户环境变量后，重启 Codex。已经打开的程序不会自动读到新变量。
 
-## 开启图片自动拦截
+## 开启或关闭图片自动拦截
 
-默认安装只提供 MCP 工具。若部署完成后你明确想让粘贴的图片自动转成文字说明，请让 Codex 按 [图片自动拦截开关](image-proxy-toggle.md) 操作。开启前它应说明：该功能会修改 Codex 的 `base_url`，安装脚本会备份当前配置，完成后需要重启 Codex。
+默认安装已经开启图片自动拦截。以后需要改变状态时，直接对 Codex 说“请开启 CodexLens 的图片自动拦截”或“请关闭 CodexLens 的图片自动拦截，但保留 MCP 工具”。它应按 [图片自动拦截开关](image-proxy-toggle.md) 操作，说明会修改或恢复 Codex 的 `base_url`，并提醒你重启 Codex。

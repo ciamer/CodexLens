@@ -9,22 +9,26 @@ MCP 工具：read_docx / read_pdf / read_document / analyze_img
 
 在 Codex 设置里开关 MCP，只影响工具调用。图片自动拦截由 Codex `base_url` 是否指向 CodexLens 代理决定，因此需要单独开关。
 
-## 推荐默认安装
+## 默认安装
 
-默认只启用 MCP，不开启图片自动拦截：
+默认安装会开启图片自动拦截：
 
 ```powershell
-python .\install.py --mcp-only
+python .\install.py
 ```
 
-这样：
+安装后：
 
 - Word/PDF 读取工具可用
 - `analyze_img` 工具可用
-- 粘贴图片不会自动拦截
-- Codex `base_url` 不会被修改
+- 粘贴图片会自动转成文字说明
+- Codex `base_url` 会指向 CodexLens 代理
 
-## 开启图片自动拦截
+大多数用户不需要自己运行命令。直接对 Codex 说“请开启 CodexLens 的图片自动拦截”或“请关闭 CodexLens 的图片自动拦截，但保留 MCP 工具”即可。
+
+已经安装过旧版本的用户不会被自动改动配置。若希望启用自动拦截，请明确对 Codex 说“请开启 CodexLens 的图片自动拦截”。
+
+## 重新开启图片自动拦截
 
 ```powershell
 python .\install.py --enable-image-proxy --upstream-base-url http://127.0.0.1:57321
