@@ -1,184 +1,129 @@
 # CodexLens
 
-CodexLens 是一个面向科研场景的 Codex 输入透镜。它把图片、DOCX、PDF 等多模态材料转换为结构化文本，让接在 Codex 后面的纯文本模型也能理解论文图表和文档内容。
+CodexLens 帮 Codex 看懂图片、Word 和 PDF 里的内容。
 
-当前版本提供两条路径：
+它适合这样的情况：你把 Codex 接到了一个纯文本模型，例如某些 DeepSeek 的部署方式。模型能读文字、写代码，却看不懂你发来的实验曲线、论文插图或 Word 文档里的图片。是否能看图取决于你接入的具体模型，并不是所有 DeepSeek 模型都不能看图。
 
-- MCP 工具：`analyze_img`、`read_docx`、`read_pdf`、`read_document`
-- 可选 HTTP 代理：拦截 OpenAI 兼容请求里的 base64 图片，调用 Qwen 视觉模型分析后替换为文本，再转发到下游服务
-
-## 使用 Codex 自动安装 CodexLens
-
-如果你希望让 Codex 自动完成克隆、安装、配置和测试，可以复制 [Codex 自动部署提示词](docs/codex-deploy-prompt.md)。提示词已经包含当前 GitHub 仓库链接，用户只需要准备百炼 API Key。
-
-## 状态
-
-这是早期原型，适合个人科研工作流和小范围试用。公开部署前请先阅读 API Key 配置、安全说明和卸载说明。
-
-## 目录
+CodexLens 会把文件中的图片交给一个视觉模型分析，再把结果变成文字交给你正在使用的下游模型：
 
 ```text
-.
-├── main.py                 # 单入口：启动 MCP stdio，可选启动 HTTP proxy
-├── mcp_server.py            # MCP JSON-RPC stdio 服务
-├── install.py               # 安装、卸载、开关图片拦截
-├── notifications.py         # Windows Toast 通知
-├── proxy/                   # HTTP 图片拦截代理
-├── tools/                   # 图片、DOCX、PDF 读取工具
-├── docs/
-│   ├── api-key-setup.md
-│   ├── codex-deploy-prompt.md
-│   ├── image-proxy-toggle.md
-│   └── python-environment.md
-└── tests/                   # 基础离线测试
+图片 / Word / PDF -> CodexLens -> Qwen 视觉模型 -> 文字说明 -> 你的下游模型
 ```
 
-## Python 环境
+你不需要先理解 MCP、代理或 Python。通常只要准备一个百炼 API Key，再把一段提示词粘贴给 Codex 即可。
 
-- Python 3.9 或更高版本
-- 依赖：`openai`、`python-docx`、`pdfplumber`、`PyMuPDF`
-- Windows 通知：`winotify`
-- 详细说明见 [Python 环境要求](docs/python-environment.md)
+## 它能做什么
 
-安装依赖：
+- 分析一张图片，例如曲线图、表格截图、实验照片。
+- 读取 Word 和 PDF 的正文，并分析其中可提取的图片。
+- 让 Codex 在需要时调用这些能力，帮助总结、解释或对比科研材料。
+- 可选开启“粘贴图片自动转成文字说明”。这个功能默认关闭。
 
-```powershell
-python -m pip install -e .
+默认安装后，CodexLens 不会自动接管你粘贴的图片。这样你仍可直接把图片交给当前模型。需要时，你可以明确让 Codex 使用 CodexLens 分析文件；自动处理图片是后面的可选功能。
+
+## 开始前：获取一个百炼 API Key
+
+API Key 可以理解为你自己的“视觉模型使用凭证”。CodexLens 默认用百炼的 `qwen3.5-flash` 来读图。
+
+1. 打开 [阿里云百炼控制台](https://bailian.console.aliyun.com/)，登录并开通百炼。
+2. 在右上角选择地域，通常选“华北 2（北京）”。
+3. 打开 **API Key** 页面，点击创建。
+4. 复制新建的 Key。它通常只会完整显示一次。
+
+百炼账号或活动可能提供免费额度，实际额度、可用模型和价格请以你的百炼控制台为准。
+
+不要把 Key 放进 `Path`、代码、GitHub 仓库、截图或公开文档。完整的获取、保存和泄漏处理说明见 [API Key 配置指南](docs/api-key-setup.md)。
+
+## 最简单的安装方式：交给 Codex
+
+打开 [Codex 自动部署提示词](docs/codex-deploy-prompt.md)，复制其中完整的一段文字，粘贴到 Codex 对话中。它会完成下载项目、安装依赖、配置 CodexLens 和基础测试。
+
+默认提示词允许你把 API Key 一起发给 Codex，步骤最少。但请先知道：Key 会进入当前对话上下文。提示词已经要求 Codex 不把 Key 写入仓库、配置文件、日志或命令输出；如果你不愿把 Key 发到对话中，请使用提示词页面里的“更安全的两步法”。
+
+安装完成后，关闭并重新打开 Codex。新开的 Codex 才能读取新的 API Key 和 CodexLens 配置。
+
+## 安装后怎么用
+
+把文件发给 Codex 后，用平常说话的方式提出要求即可。下面两句可以直接复制：
+
+```text
+请使用 CodexLens 分析这张图片，说明图中表达了什么、关键数值和可能的异常。
 ```
 
-## API Key
+```text
+请使用 CodexLens 读取并总结这个 Word 或 PDF，重点解释其中的图表。
+```
 
-CodexLens 默认使用百炼兼容接口和 `qwen3.5-flash`：
+Word 和 PDF 不会被 MCP 工具自行接管。明确说“使用 CodexLens”能让 Codex 调用正确的工具。
 
-- `CODEX_LENS_API_KEY`：必填，百炼 API Key
-- `CODEX_LENS_BASE_URL`：默认 `https://dashscope.aliyuncs.com/compatible-mode/v1`
-- `CODEX_LENS_VISION_MODEL`：默认 `qwen3.5-flash`
+## 可选：让粘贴的图片自动处理
 
-完整步骤见 [百炼 API Key 配置指南](docs/api-key-setup.md)。
+如果你希望每次粘贴图片时，CodexLens 都先用 Qwen 生成文字说明，再交给下游文本模型，可以开启图片自动拦截。
 
-PowerShell 持久配置：
+开启这个功能会修改 Codex 的 `base_url`。安装脚本会先备份原配置，关闭时会恢复它；开启或关闭后都要重启 Codex。具体步骤、状态查看和关闭方式见 [图片自动拦截开关](docs/image-proxy-toggle.md)。
+
+<details>
+<summary>不想把 API Key 发给 Codex：更安全的两步法</summary>
+
+先在 PowerShell 中运行下面命令，把 Key 保存为 Windows 用户环境变量。把 `你的API_KEY` 换成刚从百炼复制的内容。
 
 ```powershell
 [Environment]::SetEnvironmentVariable("CODEX_LENS_API_KEY", "你的API_KEY", "User")
 ```
 
-设置后需要重启 Codex、PowerShell 或其他已经打开的程序。
+然后打开 [Codex 自动部署提示词](docs/codex-deploy-prompt.md)，使用其中的两步法提示词。它会只检查 Key 是否已经存在，不会要求你把 Key 粘贴进对话。
 
-## 安装到 Codex
+设置环境变量后，也需要重启 Codex。
+</details>
 
-推荐默认只启用 MCP，不开启粘贴图片自动拦截：
+<details>
+<summary>常见问题</summary>
 
-```powershell
-python .\install.py --mcp-only
-```
+**装好了，为什么图片还是直接发给下游模型？**
 
-安装脚本会：
+这是默认行为。你可以说“请使用 CodexLens 分析这张图片”，或按 [图片自动拦截开关](docs/image-proxy-toggle.md) 开启自动处理。
 
-1. 备份 `~/.codex/config.toml`
-2. 写入 `[mcp_servers.CodexLens]`
-3. 给 MCP 启动参数添加 `--no-proxy`
-4. 不修改 Codex `base_url`
-5. 提示重启 Codex
+**设置了 API Key，为什么还是报错？**
 
-如果你希望让 Codex 自动完成克隆、安装、配置和测试，可以复制 [Codex 自动部署提示词](docs/codex-deploy-prompt.md)。
+通常是 Codex 在设置 Key 之前就已经打开。完全退出并重新打开 Codex 后再试。
 
-## 图片自动拦截开关
+**会收费吗？**
 
-图片自动拦截默认关闭。需要时显式开启：
+每次图片分析都会调用百炼视觉模型，会消耗你的免费额度或产生模型费用。请在百炼控制台查看实际用量和价格。
 
-```powershell
-python .\install.py --enable-image-proxy --upstream-base-url http://127.0.0.1:57321
-```
+**怎么关闭自动处理或完全卸载？**
 
-关闭图片自动拦截但保留 MCP：
+在项目目录运行：
 
 ```powershell
 python .\install.py --disable-image-proxy
+python .\install.py --uninstall
 ```
 
-查看当前状态：
+关闭或卸载后重启 Codex。更多说明见 [图片自动拦截开关](docs/image-proxy-toggle.md)。
+</details>
+
+<details>
+<summary>进阶：手动安装与技术说明</summary>
+
+如果你希望自己运行命令，需要 Python 3.9 或更高版本。详细要求见 [Python 环境说明](docs/python-environment.md)。
+
+```powershell
+python -m pip install -e .
+python .\install.py --mcp-only
+```
+
+`--mcp-only` 是推荐默认值：它安装 Word、PDF 和图片分析工具，但不修改 Codex 的 `base_url`，也不自动拦截图片。
+
+可以用下面命令查看安装状态：
 
 ```powershell
 python .\install.py --status
 ```
 
-开启、关闭、以及 Codex 自动启动代理时，Windows 会尽量弹出右下角 Toast 通知。通知失败不会影响主功能。完整说明见 [图片自动拦截开关](docs/image-proxy-toggle.md)。
+CodexLens 提供四个 MCP 工具：`analyze_img`、`read_docx`、`read_pdf` 和 `read_document`。项目目录、手动运行方式、测试命令和已知限制请查看 [完整技术说明](docs/python-environment.md)、[图片自动拦截开关](docs/image-proxy-toggle.md) 和源代码注释。
+</details>
 
-## 手动运行
-
-同时运行 MCP 和代理：
-
-```powershell
-python .\main.py
-```
-
-只运行 MCP：
-
-```powershell
-python .\main.py --no-proxy
-```
-
-只运行代理：
-
-```powershell
-python .\main.py --proxy-only --upstream-base-url http://127.0.0.1:57321
-```
-
-## 卸载
-
-```powershell
-python .\install.py --uninstall
-```
-
-卸载会移除 `[mcp_servers.CodexLens]`，并恢复或移除 CodexLens 管理的 `base_url`。脚本会先备份 `config.toml`；如需恢复安装前的其他配置，请从备份文件恢复。
-
-## MCP 工具
-
-`analyze_img`
-
-```json
-{"file_path": "F:\\path\\figure.png"}
-```
-
-`read_docx`
-
-```json
-{"file_path": "F:\\path\\paper.docx", "max_images": 5}
-```
-
-`read_pdf`
-
-```json
-{"file_path": "F:\\path\\paper.pdf", "include_images": false}
-```
-
-`read_document`
-
-```json
-{"file_path": "F:\\path\\paper.pdf"}
-```
-
-## 测试
-
-基础测试不联网：
-
-```powershell
-python -m unittest discover -s tests
-```
-
-语法检查：
-
-```powershell
-python -m compileall main.py mcp_server.py install.py notifications.py proxy tools tests
-```
-
-## 限制
-
-- 图片代理会同步调用视觉模型，粘贴大图或多图时请求会变慢。
-- DOCX/PDF 中的矢量图可能无法作为内嵌图片提取，只能读取文本部分。
-- `install.py` 会修改 Codex `config.toml`，因此每次安装或卸载前都会自动备份。
-- Windows Toast 通知受系统通知设置、勿扰模式和权限策略影响。
-
-## 许可证
+## 许可
 
 MIT License，见 [LICENSE](LICENSE)。
